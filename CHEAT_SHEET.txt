@@ -1,0 +1,391 @@
+================================================================================
+DEPENDENCYSCANNER CHEAT SHEET
+================================================================================
+
+QUICK START
+-----------
+1. Install: cd DependencyScanner && pip install -e .
+2. First run: dependencyscanner scan
+3. View help: dependencyscanner --help
+
+================================================================================
+COMMON COMMANDS
+--------------------------------------------------------------------------------
+
+Basic Scan:
+  dependencyscanner scan
+  
+Scan Custom Directory:
+  dependencyscanner scan --path /path/to/tools
+  
+Export to JSON:
+  dependencyscanner scan --format json --output deps.json
+  
+Export to Markdown:
+  dependencyscanner scan --format markdown --output DEPS.md
+  
+Check Version:
+  dependencyscanner --version
+
+================================================================================
+CLI FLAGS & OPTIONS
+--------------------------------------------------------------------------------
+
+Global Options:
+  -h, --help         Show help message
+  --version          Show version number
+
+Scan Command Options:
+  --path PATH        Directory to scan (default: AutoProjects)
+  --format FORMAT    Output format: text, json, markdown (default: text)
+  --output FILE      Save report to file (default: stdout)
+
+================================================================================
+PYTHON API
+--------------------------------------------------------------------------------
+
+Import:
+  from dependencyscanner import Scanner, ConflictDetector, DependencyAnalyzer
+  from dependencyscanner import ReportGenerator, ScanResult
+
+Basic Scan:
+  scanner = Scanner("/path/to/tools")
+  tools = scanner.discover_tools()
+
+Detect Conflicts:
+  conflicts = ConflictDetector.detect_conflicts(tools)
+  critical = [c for c in conflicts if c.severity == "CRITICAL"]
+
+Generate Statistics:
+  stats = DependencyAnalyzer.analyze(tools)
+  print(stats["most_popular_packages"])
+
+Generate Reports:
+  from datetime import datetime
+  
+  result = ScanResult(
+      scan_date=datetime.now().isoformat(),
+      tools_scanned=len(tools),
+      total_dependencies=stats["total_dependencies"],
+      unique_packages=stats["unique_packages"],
+      conflicts=conflicts,
+      tools=tools,
+      statistics=stats
+  )
+  
+  text_report = ReportGenerator.generate_text_report(result)
+  json_report = ReportGenerator.generate_json_report(result)
+  md_report = ReportGenerator.generate_markdown_report(result)
+
+================================================================================
+INTEGRATION WITH OTHER TOOLS
+--------------------------------------------------------------------------------
+
+With SynapseLink (Notifications):
+  from synapselink import quick_send
+  from dependencyscanner import Scanner, ConflictDetector
+  
+  scanner = Scanner("AutoProjects")
+  tools = scanner.discover_tools()
+  conflicts = ConflictDetector.detect_conflicts(tools)
+  
+  if conflicts:
+      quick_send("TEAM", "Conflicts Found", f"{len(conflicts)} conflicts")
+
+With MemoryBridge (Historical Tracking):
+  from memorybridge import MemoryBridge
+  from dependencyscanner import Scanner, DependencyAnalyzer
+  
+  scanner = Scanner("AutoProjects")
+  tools = scanner.discover_tools()
+  stats = DependencyAnalyzer.analyze(tools)
+  
+  memory = MemoryBridge()
+  memory.set("dependency_scan_latest", stats)
+  memory.sync()
+
+With ConfigManager (Configuration):
+  from configmanager import ConfigManager
+  from dependencyscanner import Scanner
+  
+  config = ConfigManager()
+  scan_config = config.get("dependencyscanner", {
+      "scan_path": "AutoProjects"
+  })
+  
+  scanner = Scanner(scan_config["scan_path"])
+  tools = scanner.discover_tools()
+
+With ContextCompressor (Compress Reports):
+  from contextcompressor import ContextCompressor
+  from dependencyscanner import ReportGenerator
+  
+  text_report = ReportGenerator.generate_text_report(result)
+  
+  compressor = ContextCompressor()
+  compressed = compressor.compress_text(text_report)
+  print(f"Compressed: {compressed.compression_ratio}%")
+
+With TestRunner (Run Tests):
+  cd AutoProjects/TestRunner
+  python testrunner.py run --tool DependencyScanner
+
+================================================================================
+OUTPUT FORMATS
+--------------------------------------------------------------------------------
+
+Text Format (Console):
+  - Human-readable
+  - Color-coded status indicators
+  - Suitable for terminal display
+  - ASCII-safe (no Unicode emojis)
+
+JSON Format (Machine-Readable):
+  - Complete structured data
+  - Suitable for programmatic processing
+  - Integrates with other tools
+  - Parse with json.load()
+
+Markdown Format (Documentation):
+  - GitHub-friendly
+  - Suitable for project wikis
+  - Professional formatting
+  - Tables and sections
+
+================================================================================
+STATUS INDICATORS
+--------------------------------------------------------------------------------
+
+[OK]  Success / Healthy / No issues
+[!]   Warning / Attention needed
+[X]   Error / Critical / Failure
+[i]   Information / Notice
+
+================================================================================
+CONFLICT SEVERITY LEVELS
+--------------------------------------------------------------------------------
+
+CRITICAL:
+  - Different exact versions (==1.0 vs ==2.0)
+  - Installation will fail
+  - Immediate action required
+
+WARNING:
+  - Different version ranges (>=1.0 vs >=2.0)
+  - Might be compatible
+  - Review recommended
+
+================================================================================
+STATISTICS EXPLAINED
+--------------------------------------------------------------------------------
+
+Stdlib-Only Tools:
+  - Tools with ZERO external dependencies
+  - Use Python standard library only
+  - Excellent references for minimal dependency design
+
+Light Tools (1-3 deps):
+  - Tools with few dependencies
+  - Easy to install and maintain
+  - Lower risk of conflicts
+
+Heavy Tools (10+ deps):
+  - Tools with many dependencies
+  - Higher maintenance burden
+  - Monitor for conflicts
+
+Most Popular Packages:
+  - Packages used across most tools
+  - Good candidates for standardization
+  - Worth keeping up-to-date
+
+Fragmented Packages:
+  - Packages used in 3+ different versions
+  - Standardization opportunities
+  - Potential conflict sources
+
+================================================================================
+COMMON WORKFLOWS
+--------------------------------------------------------------------------------
+
+Weekly Dependency Health Check:
+  1. Run scan: dependencyscanner scan
+  2. Review conflicts: Check CRITICAL first
+  3. Standardize: Update tool requirements to align versions
+  4. Re-scan: Verify conflicts resolved
+
+Before Major Release:
+  1. Scan: dependencyscanner scan --format json --output pre_release.json
+  2. Resolve all CRITICAL conflicts
+  3. Document: Include report in release notes
+  4. Archive: Save scan for historical reference
+
+Adding New Tool:
+  1. Check tool's requirements.txt
+  2. Run scan to see current state
+  3. Install new tool
+  4. Re-scan to detect new conflicts
+  5. Fix conflicts before committing
+
+Monthly Security Audit:
+  1. Generate package list (see Example 10)
+  2. Run safety check
+  3. Update vulnerable packages
+  4. Re-scan to verify
+
+================================================================================
+TROUBLESHOOTING
+--------------------------------------------------------------------------------
+
+Error: "Base path not found"
+  -> Check path exists: ls /path/to/tools
+  -> Use absolute path
+  -> Verify read permissions
+
+Error: "Could not parse requirements.txt"
+  -> Check file syntax: pip install -r requirements.txt --dry-run
+  -> Look for typos or malformed version specs
+  -> Check for unsupported features
+
+No tools found:
+  -> Ensure tools have requirements.txt or setup.py
+  -> Check exclusions aren't too broad
+  -> Verify directory structure
+
+JSON serialization error:
+  -> Update to v1.0.0+ (fixed in this version)
+  -> Check for custom objects in data
+
+Performance slow:
+  -> Reduce number of tools scanned
+  -> Check disk I/O performance
+  -> Disable optional features
+
+================================================================================
+FILE LOCATIONS
+--------------------------------------------------------------------------------
+
+Installation:
+  AutoProjects/DependencyScanner/dependencyscanner.py
+
+Configuration (future):
+  ~/.dependencyscanner/config.json
+
+Reports (if saved):
+  ~/.dependencyscanner/reports/
+
+Logs:
+  ~/.dependencyscanner/logs/scanner.log
+
+================================================================================
+EXIT CODES
+--------------------------------------------------------------------------------
+
+0  Success - No conflicts found
+1  Partial success - Warnings found (non-critical conflicts)
+2  Failure - Critical conflicts found or scan failed
+
+Use in scripts:
+  dependencyscanner scan
+  if [ $? -eq 2 ]; then
+      echo "Critical conflicts detected!"
+      exit 1
+  fi
+
+================================================================================
+VERSION SPECIFICATION SYNTAX
+--------------------------------------------------------------------------------
+
+Exact Version:
+  package==1.0.0
+
+Minimum Version:
+  package>=1.0.0
+
+Maximum Version (exclusive):
+  package<2.0.0
+
+Range:
+  package>=1.0.0,<2.0.0
+
+Compatible Release:
+  package~=1.4.2    # Same as >=1.4.2,<1.5.0
+
+With Extras:
+  package[extra1,extra2]>=1.0
+
+Multiple Constraints:
+  package>=1.0,<2.0,!=1.5.0
+
+Git URL:
+  git+https://github.com/user/repo.git@tag
+
+Editable Install:
+  -e .
+  -e /path/to/package
+
+================================================================================
+PERFORMANCE TIPS
+--------------------------------------------------------------------------------
+
+1. Scan only what you need:
+   dependencyscanner scan --path /specific/directory
+
+2. Use JSON format for large datasets:
+   dependencyscanner scan --format json --output large.json
+
+3. Run periodically (weekly/monthly) not on every commit
+
+4. Cache results for repeated analysis
+
+5. Exclude large directories with many non-tool subdirectories
+
+================================================================================
+RESOURCES
+--------------------------------------------------------------------------------
+
+Documentation:   AutoProjects/DependencyScanner/README.md
+Examples:        AutoProjects/DependencyScanner/EXAMPLES.md
+Integration:     AutoProjects/DependencyScanner/INTEGRATION_PLAN.md
+Quick Starts:    AutoProjects/DependencyScanner/QUICK_START_GUIDES.md
+Architecture:    AutoProjects/DependencyScanner/ARCHITECTURE.md
+GitHub:          https://github.com/DonkRonk17/DependencyScanner
+Issues:          https://github.com/DonkRonk17/DependencyScanner/issues
+
+================================================================================
+QUICK REFERENCE: DATA STRUCTURES
+--------------------------------------------------------------------------------
+
+Dependency:
+  {
+    "package_name": "requests",
+    "version_spec": ">=2.28.0",
+    "extras": ["security"],
+    "source_file": "/path/to/requirements.txt",
+    "is_git_url": false,
+    "is_editable": false
+  }
+
+Conflict:
+  {
+    "package_name": "requests",
+    "severity": "CRITICAL",
+    "tools": {"Tool1": "==2.28.0", "Tool2": "==2.31.0"},
+    "description": "Multiple tools require different exact versions"
+  }
+
+Tool:
+  {
+    "name": "ToolName",
+    "path": "/path/to/tool",
+    "dependencies": [...],
+    "has_requirements_txt": true,
+    "has_setup_py": false,
+    "parse_errors": []
+  }
+
+================================================================================
+
+Built by ATLAS (Team Brain)
+For the Maximum Benefit of Life
+One World. One Family. One Love.

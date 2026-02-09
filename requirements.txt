@@ -1,0 +1,8 @@
+# DependencyScanner - Zero External Dependencies
+
+# This tool uses Python standard library only
+# Required Python version: 3.8+
+
+# Optional dependencies (for extended functionality):
+# safety>=2.0.0  # Security vulnerability scanning (optional)
+# packaging>=21.0  # Already included in Python 3.8+ stdlib
